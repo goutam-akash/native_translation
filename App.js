@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, TouchableOpacity, TextInput, Button, ActivityIndicator } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import * as Clipboard from 'expo-clipboard';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Configuration, OpenAIApi } from "openai";
 
+import { VITE_GOOGLE_API_KEY, VITE_OPENAI_KEY, VITE_DEEPL_API_KEY } from '@env';
 
 export default function App() {
   const [formData, setFormData] = useState({
@@ -13,7 +17,15 @@ export default function App() {
   const [translation, setTranslation] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-
+  const googleGenAI = new GoogleGenerativeAI(
+    VITE_GOOGLE_API_KEY
+  );
+  
+  const configuration = new Configuration({
+    apiKey: VITE_OPENAI_KEY,
+  });
+  
+  const deeplApiKey = VITE_DEEPL_API_KEY;
   
   const supportedLanguages = {
     "gpt-3.5-turbo": ["Spanish", "French", "German", "Italian", "Portuguese", "Dutch", "Russian", "Chinese (Simplified)", "Japanese"],
@@ -25,6 +37,7 @@ export default function App() {
     "gemini-1.5-flash-002": ["Spanish", "French", "German", "Italian", "Portuguese", "Dutch", "Russian", "Chinese (Simplified)", "Japanese", "Korean", "Arabic"],
     "deepl": ["Spanish", "French", "Japanese", "German", "Italian", "Dutch", "Russian", "Chinese (Simplified)", "Polish", "Portuguese"],
   };
+
   const deepLLanguageCodes = {
     "Spanish": "ES",
     "French": "FR",
@@ -37,6 +50,7 @@ export default function App() {
     "Portuguese": "PT",
     "Polish": "PL",
   };
+
   const handleInputChange = (name, value) => {
     setFormData((prevData) => ({ ...prevData, [name]: value }));
     setError('');
@@ -44,36 +58,34 @@ export default function App() {
 
   const handleCopy = async () => {
     try {
-      await Clipboard.setString(translation);
+      await Clipboard.setStringAsync(translation);
       alert('Translation copied to clipboard!');
     } catch (error) {
       setError('Failed to copy translation.');
     }
   };
+  
+
   const translateWithDeepL = async (text, toLang) => {
     try {
       const targetLangCode = deepLLanguageCodes[toLang];
-      if (!targetLangCode) {
-        throw new Error(`Unsupported language: ${toLang}`);
-      }
-  
+      if (!targetLangCode) throw new Error(`Unsupported language: ${toLang}`);
+
       const response = await fetch(`https://api-free.deepl.com/v2/translate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
         body: new URLSearchParams({
-          auth_key: Config.VITE_DEEPL_API_KEY, // Ensure this variable is defined
-          text: text,
-          source_lang: "EN", // Fixed to English source
-          target_lang: targetLangCode, // Use the mapped language code
+          auth_key: VITE_DEEPL_API_KEY,
+          text,
+          source_lang: "EN",
+          target_lang: targetLangCode,
         }),
       });
-  
-      if (!response.ok) {
-        throw new Error(`DeepL API request failed with status ${response.status}`);
-      }
-  
+
+      if (!response.ok) throw new Error(`DeepL API request failed with status ${response.status}`);
+      
       const data = await response.json();
       return data.translations[0].text;
     } catch (error) {
@@ -81,39 +93,15 @@ export default function App() {
       throw new Error("Failed to translate with DeepL. Please check the API key, language codes, or try again later.");
     }
   };
+
   const translate = async () => {
     const { language, message, model } = formData;
 
     try {
       setIsLoading(true);
-
       let translatedText = '';
 
-      if (model.startsWith('gpt')) {
-        const response = await openai.createChatCompletion({
-          model: model,
-          messages: [
-            {
-              role: 'system',
-              content: `Translate this sentence into ${language}.`,
-            },
-            { role: 'user', content: message },
-          ],
-          temperature: 0.3,
-          max_tokens: 100,
-        });
-        translatedText = response.data.choices[0].message.content.trim();
-      } else if (model.startsWith('gemini')) {
-        const genAIModel = googleGenAI.getGenerativeModel({
-          model: 'gemini-1.5-flash',
-        });
-        const prompt = `Translate the text: ${message} into ${language}`;
-        const result = await genAIModel.generateContent(prompt);
-        const response = await result.response;
-        translatedText = response.text();
-      } else if (model === 'deepl') {
-        translatedText = await translateWithDeepL(message, language);
-      }
+      // Logic for translation based on model selected
 
       setTranslation(translatedText);
       setIsLoading(false);
@@ -150,11 +138,11 @@ export default function App() {
   };
 
   return (
-    
-    <View style={styles.container}>    
+    <View style={styles.container}>
+      <StatusBar></StatusBar>
       <View style={styles.sidebar}>
         <Text style={styles.heading}>Models</Text>
-        {["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo", "gemini-1.5-pro-001", "gemini-1.5-flash-001","gemini-1.5-pro-002", "gemini-1.5-flash-002","deepl"].map((model) => (
+        {Object.keys(supportedLanguages).map((model) => (
           <TouchableOpacity
             key={model}
             style={[styles.modelOption, formData.model === model && styles.active]}
@@ -204,6 +192,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     backgroundColor: "#fff",
+    marginTop:25,
   },
   sidebar: {
     width: "28%",
