@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     marginTop:25,
   },
   sidebar: {
-    width: "28%",
+    width: "30%",
     backgroundColor: "#f4f4f4",
     padding: 20,
   },
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#e0e0e0",
   },
   title: {
-    fontSize: 30,
+    fontSize: 35,
     fontWeight: "bold",
   },
   textInput: {
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   },
   copyButton: {
     padding: 10,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#d4d4d4",
     marginTop: 10,
   },
   translation: {
