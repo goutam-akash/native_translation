@@ -228,7 +228,7 @@ export default function App() {
         </View>
         <TextInput
           style={styles.textArea}
-          placeholder="Type your message here..."
+          placeholder="Type your message here...."
           value={formData.message}
           onChangeText={(text) => setFormData({ ...formData, message: text })}
         />
