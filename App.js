@@ -1,14 +1,25 @@
-import React, { useState } from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TouchableOpacity, TextInput, Button, ActivityIndicator } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import * as Clipboard from 'expo-clipboard';
+import React, { useState } from "react";
+import { StatusBar } from "expo-status-bar";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  TextInput,
+  Button,
+  ActivityIndicator,
+} from "react-native";
+
+import Config from "react-native-config";
+
+import { Picker } from "@react-native-picker/picker";
+import * as Clipboard from "expo-clipboard";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Configuration, OpenAIApi } from "openai";
 
-import { VITE_GOOGLE_API_KEY, VITE_OPENAI_KEY, VITE_DEEPL_API_KEY } from 'react-native-dotenv';
-
-
+const VITE_GOOGLE_API_KEY = Config.GOOGLE_API_KEY;
+const VITE_OPENAI_KEY = Config.OPENAI_API_KEY;
+const VITE_DEEPL_API_KEY = Config.DEEPL_API_KEY;
 export default function App() {
   const [formData, setFormData] = useState({
     language: "French",
@@ -21,35 +32,125 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
 
   const supportedLanguages = {
-    "gpt-3.5-turbo": ["Spanish", "French", "German", "Italian", "Portuguese", "Dutch", "Russian", "Chinese (Simplified)", "Japanese"],
-    "gpt-4": ["Spanish", "French", "Telugu", "German", "Italian", "Portuguese", "Dutch", "Russian", "Chinese (Simplified)", "Japanese", "Korean"],
-    "gpt-4-turbo": ["Spanish", "French", "Telugu", "Japanese", "German", "Italian", "Portuguese", "Dutch", "Russian", "Chinese (Simplified)", "Korean", "Arabic"],
-    "gemini-1.5-pro-001": ["Spanish", "French", "German", "Italian", "Portuguese", "Dutch", "Russian", "Chinese (Simplified)"],
-    "gemini-1.5-flash-001": ["Spanish", "French", "German", "Italian", "Portuguese", "Dutch", "Russian", "Chinese (Simplified)"],
-    "gemini-1.5-pro-002": ["Spanish", "French", "German", "Italian", "Portuguese", "Dutch", "Russian", "Chinese (Simplified)", "Japanese", "Korean"],
-    "gemini-1.5-flash-002": ["Spanish", "French", "German", "Italian", "Portuguese", "Dutch", "Russian", "Chinese (Simplified)", "Japanese", "Korean", "Arabic"],
-    "deepl": ["Spanish", "French", "Japanese", "German", "Italian", "Dutch", "Russian", "Chinese (Simplified)", "Polish", "Portuguese"],
+    "gpt-3.5-turbo": [
+      "Spanish",
+      "French",
+      "German",
+      "Italian",
+      "Portuguese",
+      "Dutch",
+      "Russian",
+      "Chinese (Simplified)",
+      "Japanese",
+    ],
+    "gpt-4": [
+      "Spanish",
+      "French",
+      "Telugu",
+      "German",
+      "Italian",
+      "Portuguese",
+      "Dutch",
+      "Russian",
+      "Chinese (Simplified)",
+      "Japanese",
+      "Korean",
+    ],
+    "gpt-4-turbo": [
+      "Spanish",
+      "French",
+      "Telugu",
+      "Japanese",
+      "German",
+      "Italian",
+      "Portuguese",
+      "Dutch",
+      "Russian",
+      "Chinese (Simplified)",
+      "Korean",
+      "Arabic",
+    ],
+    "gemini-1.5-pro-001": [
+      "Spanish",
+      "French",
+      "German",
+      "Italian",
+      "Portuguese",
+      "Dutch",
+      "Russian",
+      "Chinese (Simplified)",
+    ],
+    "gemini-1.5-flash-001": [
+      "Spanish",
+      "French",
+      "German",
+      "Italian",
+      "Portuguese",
+      "Dutch",
+      "Russian",
+      "Chinese (Simplified)",
+    ],
+    "gemini-1.5-pro-002": [
+      "Spanish",
+      "French",
+      "German",
+      "Italian",
+      "Portuguese",
+      "Dutch",
+      "Russian",
+      "Chinese (Simplified)",
+      "Japanese",
+      "Korean",
+    ],
+    "gemini-1.5-flash-002": [
+      "Spanish",
+      "French",
+      "German",
+      "Italian",
+      "Portuguese",
+      "Dutch",
+      "Russian",
+      "Chinese (Simplified)",
+      "Japanese",
+      "Korean",
+      "Arabic",
+    ],
+    deepl: [
+      "Spanish",
+      "French",
+      "Japanese",
+      "German",
+      "Italian",
+      "Dutch",
+      "Russian",
+      "Chinese (Simplified)",
+      "Polish",
+      "Portuguese",
+    ],
   };
   const deepLLanguageCodes = {
-    "Spanish": "ES",
-    "French": "FR",
-    "German": "DE",
-    "Italian": "IT",
-    "Dutch": "NL",
-    "Russian": "RU",
+    Spanish: "ES",
+    French: "FR",
+    German: "DE",
+    Italian: "IT",
+    Dutch: "NL",
+    Russian: "RU",
     "Chinese (Simplified)": "ZH",
-    "Japanese": "JA",
-    "Portuguese": "PT",
-    "Polish": "PL",
+    Japanese: "JA",
+    Portuguese: "PT",
+    Polish: "PL",
   };
   const exportToCSV = async () => {
     try {
-      const response = await fetch("https://translation-app-ooq8.onrender.com/api/export", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        "https://translation-app-ooq8.onrender.com/api/export",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to export data to CSV");
@@ -78,7 +179,7 @@ export default function App() {
       if (!targetLangCode) {
         throw new Error(`Unsupported language: ${toLang}`);
       }
-  
+
       const response = await fetch(`https://api-free.deepl.com/v2/translate`, {
         method: "POST",
         headers: {
@@ -91,16 +192,20 @@ export default function App() {
           target_lang: targetLangCode, // Use the mapped language code
         }),
       });
-  
+
       if (!response.ok) {
-        throw new Error(`DeepL API request failed with status ${response.status}`);
+        throw new Error(
+          `DeepL API request failed with status ${response.status}`
+        );
       }
-  
+
       const data = await response.json();
       return data.translations[0].text;
     } catch (error) {
       console.error("DeepL Translation Error:", error);
-      throw new Error("Failed to translate with DeepL. Please check the API key, language codes, or try again later.");
+      throw new Error(
+        "Failed to translate with DeepL. Please check the API key, language codes, or try again later."
+      );
     }
   };
 
@@ -130,17 +235,15 @@ export default function App() {
         const genAIModel = VITE_GOOGLE_API_KEY.getGenerativeModel({
           model: "gemini-1.5-flash",
         });
-          const prompt = `Translate the text: ${message} into ${language}`;
+        const prompt = `Translate the text: ${message} into ${language}`;
 
-          const result = await genAIModel.generateContent(prompt);
-          const response = await result.response;
-          const text = response.text();
-          
-          translatedText = response.text();
-      
+        const result = await genAIModel.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+
+        translatedText = response.text();
       } else if (model === "deepl") {
         translatedText = await translateWithDeepL(message, language);
-        
       }
 
       setTranslation(translatedText);
@@ -161,7 +264,7 @@ export default function App() {
             model: model,
             ranking: 4,
             rating: 4,
-            classification: 'translation',
+            classification: "translation",
           }),
         }
       );
@@ -200,10 +303,22 @@ export default function App() {
       <View style={styles.sidebar}>
         <Text style={styles.heading}>Models</Text>
         <View style={styles.choices}>
-          {["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo", "gemini-1.5-pro-001", "gemini-1.5-flash-001","gemini-1.5-pro-002","gemini-1.5-flash-002", "deepl"].map((model) => (
+          {[
+            "gpt-3.5-turbo",
+            "gpt-4",
+            "gpt-4-turbo",
+            "gemini-1.5-pro-001",
+            "gemini-1.5-flash-001",
+            "gemini-1.5-pro-002",
+            "gemini-1.5-flash-002",
+            "deepl",
+          ].map((model) => (
             <TouchableOpacity
               key={model}
-              style={[styles.modelOption, formData.model === model && styles.active]}
+              style={[
+                styles.modelOption,
+                formData.model === model && styles.active,
+              ]}
               onPress={() => setFormData({ ...formData, model })}
             >
               <Text>{model}</Text>
@@ -219,7 +334,9 @@ export default function App() {
           <Text style={styles.label}>To:</Text>
           <Picker
             selectedValue={formData.language}
-            onValueChange={(itemValue) => setFormData({ ...formData, language: itemValue })}
+            onValueChange={(itemValue) =>
+              setFormData({ ...formData, language: itemValue })
+            }
           >
             {supportedLanguages[formData.model]?.map((lang) => (
               <Picker.Item key={lang} label={lang} value={lang} />
@@ -232,18 +349,25 @@ export default function App() {
           value={formData.message}
           onChangeText={(text) => setFormData({ ...formData, message: text })}
         />
-         {error && <Text style={styles.error}>{error}</Text>}
-         <Button title="Translate" onPress={handleOnSubmit} />
-         <View style={styles.translation}>
-          
-          {isLoading ? <BeatLoader size={12} color="red" /> : <Text>{translation}</Text>}
+        {error && <Text style={styles.error}>{error}</Text>}
+        <Button title="Translate" onPress={handleOnSubmit} />
+        <View style={styles.translation}>
+          {isLoading ? (
+            <BeatLoader size={12} color="red" />
+          ) : (
+            <Text>{translation}</Text>
+          )}
         </View>
         {showNotification && (
           <View style={styles.notification}>
             <Text style={styles.notificationText}>Copied to clipboard!</Text>
           </View>
         )}
-        <Button title="Export to CSV" onPress={exportToCSV} style={styles.exportBtn} />
+        <Button
+          title="Export to CSV"
+          onPress={exportToCSV}
+          style={styles.exportBtn}
+        />
       </View>
     </View>
   );
@@ -254,7 +378,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     backgroundColor: "#fff",
-    marginTop:25,
+    marginTop: 25,
   },
   sidebar: {
     width: "30%",
